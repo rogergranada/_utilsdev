@@ -24,9 +24,12 @@ logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=lo
 from utils import Arguments, msmt
 from utils.ontology import OWL
 
+USER = 'roger'
+TOKEN = ''
+
 class Translation():
     def __init__(self):
-        self.token = msmt.get_access_token('rogerleitzke', 'eUyOVWOAqMOWO0EmvupaCtbu2WibD/3WZqmJ/GFTV1A=')
+        self.token = msmt.get_access_token(USER, TOKEN)
 
     def getTranslation(self, phrase, source_lang, target_lang):
         response = msmt.translate(self.token, phrase, target_lang, source_lang)
