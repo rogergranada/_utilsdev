@@ -2,70 +2,55 @@
 #-*- coding: utf-8 -*-
 
 """
-This class connects with Microsof Translation API and generates translations
-for phrases passed as parameters in 'getTranslation() function.
-
-Created on Feb 24, 2013
-@author: granada
+Translate components
 """ 
-
-import sys
-sys.path.insert(0, '..') # This line is inserted to find the package utils.msmt
-
-# Set standard output encoding to UTF-8.
-from codecs import getwriter, open
-sys.stdout = getwriter('UTF-8')(sys.stdout)
-import time
-
 import logging
-logger = logging.getLogger('interlinks')
+logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
-from utils import Arguments, msmt
-from utils.ontology import OWL
+import argparse
+from googletrans import Translator
+from os.path import dirname, splitext, basename, join
+import codecs
 
-USER = 'roger'
-TOKEN = ''
+import progressbar
 
-class Translation():
-    def __init__(self):
-        self.token = msmt.get_access_token(USER, TOKEN)
+def main(inputfile):
+    """
+    pistol-n \t weapon \t random-v \t start-v
+    """
+    translator = Translator()
 
-    def getTranslation(self, phrase, source_lang, target_lang):
-        response = msmt.translate(self.token, phrase, target_lang, source_lang)
-        if response:
-            concept = response.split('>')[1].split('<')[0]
-            if '\'' in concept:
-                concept = concept.replace('\'', '&#39;')
-            return concept
-        else:
-            return None
+    dirin = dirname(inputfile)
+    fname, ext = splitext(basename(inputfile))
+    
+    fout = codecs.open(join(dirin, fname+'_pt.txt'), 'w', 'utf-8')
+
+    #count lines
+    lines = 0
+    with open(inputfile) as fin:
+        for _ in fin:
+            lines += 1
+
+    pb = progressbar.ProgressBar(lines)
+    with open(inputfile) as fin:
+        for line in fin:
+            w1, type, rel, w2 = line.strip().split('\t')
+            #print w1, rel, w2, '->', type
+            w1_pt = translator.translate(w1, dest='pt')
+            w2_pt = translator.translate(w2, dest='pt')
+            type_pt = translator.translate(type, dest='pt')
+            rel_pt = translator.translate(rel, dest='pt')
+
+            fout.write('%s %s %s %s\n' % (w1_pt.text, type_pt.text, rel_pt.text, w2_pt.text))
+            pb.update()
+    fout.close()
 
 # End of Translation class
 
-def main(args):
-    t1 = time.time()
-    desc = "Get ids of Wikipedia articles and store in the database. \
-The database is composed by ID and TITLE of each article. The current \
-implementation works only with the MongoDB database."
-
-    required = [desc, 'inputfile', 'outputfile', 'language']
-    obj_args = Arguments(required)
-    logger.info(obj_args)
-    args = obj_args.getArgs()
-
-    handler = OWL(args.inputfile, args.outputfile)
-    webapi = Translation()
-
-    for source_language, label in handler:
-        #print source_language, label
-        translated = webapi.getTranslation(label.lower(), source_language, args.language)
-        if translated != None:
-            logger.info('Inserting concept [%s]: %s' % (label, translated))
-            handler.insert(translated.lower(), args.language)
-        else:
-            handler.insert('NULL', args.language)
-            logger.info('Concept not found: %s' % label.title())        
-
 if __name__ == "__main__":
-    main(sys.argv)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('inputfile', metavar='file_input', help='file containing text to translate.')
+    args = parser.parse_args()
+
+    main(args.inputfile)
