@@ -1,5 +1,3 @@
-
-
 # Implementation of RAKE - Rapid Automatic Keyword Exraction algorithm
 # as described in:
 # Rose, S., D. Engel, N. Cramer, and W. Cowley (2010).
