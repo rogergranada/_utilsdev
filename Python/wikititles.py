@@ -6,6 +6,7 @@ from codecs import open
 import pymongo
 from pymongo import Connection
 
+
 def main():
     #connection = Connection('localhost')
     #db = connection['dsm_corpora']
@@ -29,4 +30,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-#
