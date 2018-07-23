@@ -6,6 +6,7 @@ from codecs import open
 import pymongo
 from pymongo import Connection
 
+
 def main():
     #connection = Connection('localhost')
     #db = connection['dsm_corpora']
