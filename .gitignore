@@ -1,2 +1,4 @@
 *.py~
 *.md~
+
+.ipynb_checkpoints/
