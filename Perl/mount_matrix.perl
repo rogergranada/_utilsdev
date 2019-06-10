@@ -53,7 +53,7 @@ while(<$filereaderInput>){
 #print $line."##\n";
 #####################################################################################################
 # This program mount a matrix "noun x relation" where the number of the relation is the frequency.  #
-# It's mounted three matrices: An x aN, Sv x sV and Vo x vO, explained as followed:                 #
+# It generates three matrices: An x aN, Sv x sV and Vo x vO, explained as followed:                 #
 #   An x aN = Noun and its modifiers (using: nn, amod, of)                                          #
 #   Sv x sV = Verbs when they have subjects (using: subj, agent)                                    #
 #   Vo x vO = Verbs when they have objects (using: _obj, iobj)                                      #
