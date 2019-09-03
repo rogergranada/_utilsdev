@@ -3,9 +3,9 @@
 
 import cv2
 import os
-from os.path import splitext, join
+from os.path import splitext, join, basename, dirname, isfile
 import argparse
-from progressBar import ProgressBar
+#from progressBar import ProgressBar
 
 def getNamesAsInts(files_list):
     """
@@ -14,16 +14,17 @@ def getNamesAsInts(files_list):
     """
     fids = []
     for fname in files_list:
-        name, ext = splitext(fname)
+        name, ext = splitext(basename(fname))
         if ext == '.jpg':
             fids.append(int(name))
     return sorted(fids) 
 
 
-def backgroundSubtraction(input_folder, output_folder):
+def backgroundSubtraction(input, output_folder):
     """
-    Receives a folder containing images in jpg format and remove
-    the background for each image. Files are saved in output_folder.
+    Receives a folder or a file containing images in jpg 
+    format and remove the background for each image. 
+    Files are saved in output_folder.
 
     Parameters:
     -----------
@@ -32,24 +33,31 @@ def backgroundSubtraction(input_folder, output_folder):
     output_folder : string
         path to the folder where images are saved.
     """
-    fgbg = cv2.createBackgroundSubtractorMOG2()
-    files_ids = getNamesAsInts(os.listdir(input_folder))
-    pb = ProgressBar(len(files_ids))
+    if isfile(input):
+        list_files = [line.strip() for line in open(input)]
+    else:
+        list_files = os.listdir(input)
+    if list_files:
+        rootname = dirname(list_files[0])
+        files_ids = getNamesAsInts(list_files)
 
-    #train background subtractor :: about 100 images
-    for id in files_ids[:100]:
-        path_img = join(input_folder, str(id)+'.jpg')
+    #fgbg = cv2.createBackgroundSubtractorMOG2()
+    fgbg = cv2.BackgroundSubtractorMOG()
+    #pb = ProgressBar(len(files_ids))
+    #train background subtractor :: about 50 images
+    for id in files_ids[:50]:
+        path_img = join(rootname, str(id)+'.jpg')
         img = cv2.imread(path_img, 1)
         fgbg.apply(img)
 
     #apply remotion of the background in all images
     for id in files_ids:
-        path_img = join(input_folder, str(id)+'.jpg')
+        path_img = join(rootname, str(id)+'.jpg')
         path_out = join(output_folder, str(id)+'.jpg')
         img = cv2.imread(path_img, 1)
         fgmask = fgbg.apply(img)
         cv2.imwrite(path_out, fgmask)
-        pb.update()
+        #pb.update()
     cv2.destroyAllWindows()
     
 if __name__ == "__main__":
