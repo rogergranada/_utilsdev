@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
 
-def fix_boxes(x, y, w, h, valx=0, valy=0):
+def fix_boxes(x, y, w, h, valx=0, valy=0, mode=None):
     """ Fix bounding box coordinates when they are out of the image """
     x, y, w, h = map(int, (x, y, w, h))
     if x < valx: 
@@ -17,7 +17,9 @@ def fix_boxes(x, y, w, h, valx=0, valy=0):
     if y < valy:
         h += y
         y = 0
-    #if y+h < 120: h = 114 # only for person
+    if mode == 'person':
+        if y != 0: y = 0
+        if y+h < 120: h = 114
     if x+w > 257: w = 257-x
     if y+h > 257: h = 257-y
     return x, y, w, h
@@ -87,10 +89,12 @@ def load_dic_file(input):
 
 def coordinates_objects(file_input, file_frames, output=None):
     if not output:
-        output = join(dirname(file_input), 'obj_norm.txt')
+        output = join(dirname(file_input), 'person_norm.txt')
 
     dobj, drem = load_dic_file(file_frames)
     for k in drem: print k, drem[k]
+    last_idfr = -1
+    recorded_idfr = False
     with open(file_input) as fin, open(output, 'w') as fout:
         for i, line in enumerate(fin):
             if i == 0 or line.startswith('---') or line.startswith('Modified'):
@@ -99,11 +103,17 @@ def coordinates_objects(file_input, file_frames, output=None):
             # 86 \t person \t (0,51,49,64) \t 0 \t /home/roger/KSCGR/data1/boild-egg/rgb256/86.jpg
             arr = line.strip().split('\t')
             idfr = int(arr[0])
+            if idfr != last_idfr:
+                if idfr > 0 and not recorded_idfr:
+                    last_path = join(dirname(arr[4]), str(last_idfr)+'.jpg')
+                    fout.write('%d\tNone\t(-,-,-,-)\tNone\t%s\n' % (last_idfr, last_path))
+                last_idfr = idfr
+                recorded_idfr = False
             if not arr[2].startswith('(-,'):
-                x, y, w, h = eval(arr[2])
-                x, y, w, h = fix_boxes(x, y, w, h, valx=0, valy=0)
-                idobj = int(arr[3])
                 obj = arr[1]
+                x, y, w, h = eval(arr[2])
+                x, y, w, h = fix_boxes(x, y, w, h, valx=0, valy=0, mode=obj)
+                idobj = int(arr[3])
 
                 if drem.has_key(idobj):
                     remove = False
@@ -128,6 +138,7 @@ def coordinates_objects(file_input, file_frames, output=None):
                         fout.write('%d\t%s\t(%d,%d,%d,%d)\t%s\t%s\n' % (idfr, arr[1], stored_x, stored_y, stored_w, stored_h, arr[3], arr[4]))
                     else:
                         fout.write('%d\t%s\t(%d,%d,%d,%d)\t%s\t%s\n' % (idfr, arr[1], x, y, w, h, arr[3], arr[4]))
+                    recorded_idfr = True
                     if idfr in dobj[idobj]['end']:
                         dobj[idobj]['record'] = False
                         dobj[idobj]['data'] = None
@@ -292,5 +303,5 @@ if __name__ == '__main__':
     #coordinates_objects(args.input_1, args.input_2)
     #remove_negative_file(args.input_1)
     #generate_relations(args.input_1)
-    #merge_objects_person(args.input_1, args.input_2)
+    merge_objects_person(args.input_1, args.input_2)
     #change_name_object(args.input_1)
