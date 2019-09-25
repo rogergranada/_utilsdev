@@ -171,7 +171,9 @@ def remove_negative_file(input, output=None):
 
 
 def generate_relations(input, output=None):
-    #TODO: Generate from file (read file dic_object, dic_relations, and relations)
+    """ Create file containing relations. Input file has the form:
+        idfr_start-idfr_end-id_obj1-id_relation-id_obj2
+    """
     if not output:
         output = join(dirname(input), 'relations.txt')
     do = {
@@ -208,23 +210,31 @@ def generate_relations(input, output=None):
         4: 'move'
     }
 
-    with open(input) as fin, open(output, 'w') as fout:
+    relations = []
+    max_fr = 0
+    with open(input) as fin:
         for i, line in enumerate(fin):
-            if i == 0 or line.startswith('---') or line.startswith('Modified'):
-                fout.write(line)
-                continue #header
-            # 0 \t None \t None
+            arr = map(int, line.strip().split('-'))
+            start, end, o1, r, o2 = arr
+            if start >= end:
+                logger.error('Start is greater than end frame: {} - {} [LINE: {}]'.format(start, end, i))
+                sys.exit(0)
+            relations.append((start, end, o1, r, o2))
+            if end > max_fr:
+                max_fr = end
+    max_fr += 1
+
+    with open(output, 'w') as fout:
+        # header
+        fout.write('Frame\tSubject\tRelation\tObject\n')
+        for idfr in range(max_fr):
             recorded = False
-            arr = line.strip().split('\t')
-            id = int(arr[0])
-            if id >= 190 and id <= 279:
-                fout.write('%d	%s	%s	%s\n' % (id, do[0], dr[0], do[3]))
-                recorded = True
-            if id >= 218 and id <= 258:
-                fout.write('%d	%s	%s	%s\n' % (id, do[0], dr[4], do[3]))
-                recorded = True
+            for start, end, o1, r, o2 in relations:
+                if idfr >= start and idfr <= end:
+                    fout.write('%d\t%s\t%s\t%s\n' % (idfr, do[o1], dr[r], do[o2]))
+                    recorded = True
             if not recorded:
-                fout.write('%d\t%s\t%s\t%s\n' % (id, 'None', 'None', 'None'))
+                fout.write('%d\tNone\tNone\tNone\n' % idfr)
 
 
 def merge_objects_person(input_object, input_person, output=None):
@@ -296,12 +306,12 @@ def change_name_object(input, output=None):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('input_1', metavar='input_object', help='Plain text file')
-    parser.add_argument('input_2', metavar='input_person', help='Plain text file')
+    #parser.add_argument('input_2', metavar='input_person', help='Plain text file')
     args = parser.parse_args()
     
     #fix_bbox_file(args.input_1)
     #coordinates_objects(args.input_1, args.input_2)
     #remove_negative_file(args.input_1)
-    #generate_relations(args.input_1)
-    merge_objects_person(args.input_1, args.input_2)
+    generate_relations(args.input_1)
+    #merge_objects_person(args.input_1, args.input_2)
     #change_name_object(args.input_1)
