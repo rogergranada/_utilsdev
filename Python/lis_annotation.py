@@ -62,7 +62,7 @@ def load_dic_file(input):
                     logger.error('Pair of frames is not correct: {} [LINE: {}]'.format(ids, i))
                     sys.exit(0)
                 id_start, id_end = ids
-                if id_start >= id_end:
+                if id_start > id_end:
                     logger.error('Start frame is greater than end frame: ({} : {}) [LINE: {}]'.format(ids[0], ids[1], i))
                     sys.exit(0)
                 if id_start >= last:
