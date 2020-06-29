@@ -96,7 +96,12 @@ def main(bagfolder):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('bagfile', metavar='bag_file', help='Bag containing images')
+    parser.add_argument('bagfile', metavar='bag_file', help='Bag or folder containing several bags')
     args = parser.parse_args()
-    main(args.bagfile)
+    if fh.is_folder(args.bagfile):
+        main(args.bagfile)
+    elif fh.is_file(args.bagfile):
+        main_extract(args.bagfile)
+    else:
+        logger.info('Path does not contain bag files')
     
