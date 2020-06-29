@@ -18,6 +18,17 @@ import numpy as np
 
 import filehandler as fh
 from filehandler import Stats, Boat
+from matplotlib import pylab
+
+PARAMS = {'legend.fontsize': 28,
+          'figure.figsize': (15, 10),
+         'axes.labelsize': 28,
+         'axes.titlesize':28,
+         'xtick.labelsize': 28,
+         'ytick.labelsize': 28}
+pylab.rcParams.update(PARAMS)
+
+#FONTSIZE=28
 
 def minimal_distance(boat1, boat2):
     lowest_distance = float('inf')
@@ -32,24 +43,24 @@ def minimal_distance(boat1, boat2):
     return min1x, min1y, min2x, min2y
 
 
-def plot_trajectories(boat1, boat2, fname, angle1=40, angle2=120):
+def plot_trajectories(boat1, boat2, fname, angle1=40, angle2=60):
     plt.clf()
-    fig = plt.figure(figsize=(10,10))
+    fig = plt.figure()#figsize=(15,10))
     ax = fig.add_subplot(1, 1, 1)
-    ax.set_xlim(398, 427)
-    ax.set_ylim(103, 135)
-    #ax.set_xlim(445, 485)
-    #ax.set_ylim(100, 115)
+    #ax.set_xlim(398, 427)
+    #ax.set_ylim(103, 135)
+    ax.set_xlim(445, 485)
+    ax.set_ylim(100, 115)
 
-    ax.plot(boat1.x, boat1.y, '-b', label=boat1.name)
-    ax.plot(boat2.x, boat2.y, '-r', label=boat2.name)
+    ax.plot(boat1.x, boat1.y, '-b', label=boat1.name, linewidth=2)
+    ax.plot(boat2.x, boat2.y, '-r', label=boat2.name, linewidth=2)
 
     min1x, min1y, min2x, min2y = minimal_distance(boat1, boat2)
 
-    plt.scatter(min1x, min1y, s=100, marker=(3, 0, angle1))
-    plt.scatter(min2x, min2y, s=100, marker=(3, 0, angle2))
-    plt.xlabel('Coordenadas em metros', fontsize=14)
-    plt.ylabel('Coordenadas em metros', fontsize=14)
+    plt.scatter(min1x, min1y, s=200, marker=(3, 0, angle1))
+    plt.scatter(min2x, min2y, s=200, marker=(3, 0, angle2))
+    plt.xlabel('Coordenadas em metros')#, fontsize=FONTSIZE)
+    plt.ylabel('Coordenadas em metros')#, fontsize=FONTSIZE)
     ax.grid(which='major', color='#CCCCCC', linestyle='--')
     plt.savefig(fname, bbox_inches='tight')
     plt.close()
@@ -68,15 +79,15 @@ def normalize_values(vector):
 
 def plot_distribution(vector, label, fname, color='-b', mode=None):
     plt.clf()
-    fig = plt.figure(figsize=(15,10))
+    fig = plt.figure()#figsize=(15,10))
     ax = fig.add_subplot(1, 1, 1)
 
     if mode:
         vector = normalize_values(vector)
 
     ax.plot(range(len(vector)), vector, color)
-    plt.xlabel('Tempo', fontsize=14)
-    plt.ylabel(label, fontsize=14)
+    plt.xlabel('Tempo')#, fontsize=FONTSIZE)
+    plt.ylabel(label)#, fontsize=FONTSIZE)
     ax.grid(which='major', color='#CCCCCC', linestyle='--')
     plt.savefig(fname, bbox_inches='tight')
     plt.close()
@@ -93,10 +104,10 @@ def main_plot(bagname):
         with open(fileinput, 'rb') as f:
             dic = pickle.load(f)
 
-        #fplot = join(dirout, fname+'_trajectory.pdf')
-        #logger.info('Saving plot: {}'.format(fplot))
-        #plot_trajectories(dic['boat1'], dic['boat2'], fplot, angle1=80, angle2=40)
-         
+        fplot = join(dirout, fname+'_trajectory.pdf')
+        logger.info('Saving plot: {}'.format(fplot))
+        plot_trajectories(dic['boat1'], dic['boat2'], fplot, angle1=120, angle2=30)
+        ''' 
         fplot = join(dirout, fname+'_dcpa.pdf')
         logger.info('Saving plot: {}'.format(fplot))
         plot_distribution(dic['stats'].dic['dcpa'], 'Valor de DCPA', fplot, color='tab:blue') 
@@ -107,13 +118,13 @@ def main_plot(bagname):
   
         fplot = join(dirout, fname+'_distance.pdf')
         logger.info('Saving plot: {}'.format(fplot))
-        plot_distribution(dic['stats'].dic['distance'], 'Distância em metros', fplot, color='tab:green', mode=True) 
+        plot_distribution(dic['stats'].dic['distance'], 'Distancia em metros', fplot, color='tab:green', mode=True) 
 
         fplot = join(dirout, fname+'_computation.pdf')
         logger.info('Saving plot: {}'.format(fplot))
         plot_distribution(dic['stats'].dic['computation'], 'Custo computacional', fplot, color='tab:red') 
-
-        os.remove(fileinput)
+        '''
+        #os.remove(fileinput)
   
 
 def main(bagfolder):
